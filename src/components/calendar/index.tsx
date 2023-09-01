@@ -1,4 +1,4 @@
-import { memo, useState, forwardRef, useImperativeHandle } from 'react'
+import { memo, useState, forwardRef, useImperativeHandle, useEffect } from 'react'
 import './index.css'
 
 
@@ -12,10 +12,22 @@ interface CalendarRef {
     setDate: (date: Date) => void
 }
 
-const InternalCalendar: React.ForwardRefRenderFunction<CalendarRef, CalendarProps> = memo((props, ref: React.Ref<CalendarRef>) => {
+const InternalCalendar: React.ForwardRefRenderFunction<CalendarRef, CalendarProps> = (props, ref) => {
     const { dafaultValue = new Date(), onChange } = props
     const [date, setDate] = useState(dafaultValue)
-    const [activeDateIdx, setActiveDateIdx] = useState(1)
+    const year = date.getFullYear(),
+        month = date.getMonth(),
+        currentDate = date.getDate(),
+        firstDay = new Date(year, month, 1).getDay(),
+        prevDistance = firstDay ? firstDay - 1 : 6,
+        monthArea = new Date(year, month + 1, 0).getDate()
+    let prevInitCount = new Date(year, month, 0).getDate() - prevDistance + 1
+    const [activeDateIdx, setActiveDateIdx] = useState(currentDate)
+
+    useEffect(() => {
+        setDate(dafaultValue)
+    }, [props])
+
     useImperativeHandle(ref, () => {
         return {
             getDate() {
@@ -26,42 +38,38 @@ const InternalCalendar: React.ForwardRefRenderFunction<CalendarRef, CalendarProp
             }
         }
     })
-    const _y = date.getFullYear(),
-        _m = date.getMonth(),
-        d = date.getDay(),
-        _d = d ? d - 1 : 6,
-        _count = new Date(_y, _m + 1, 0).getDate()
 
-    let _prev_count = new Date(_y, _m, 0).getDate() - _d + 1
+    const onClickMonthBtn = (isNext: boolean) => () => {
+        setDate(new Date(year, isNext ? month + 1 : month - 1, 1))
+    }
 
-    const onClickBtn = (isNext: boolean) => () => {
-        setDate(new Date(_y, isNext ? _m + 1 : _m - 1, 1))
-        setActiveDateIdx(1)
+    const onClickYearBtn = (isNext: boolean) => () => {
+        setDate(new Date(isNext ? year + 1 : year - 1, month, 1))
     }
 
     const onClickCurrentMonthCell = (idx: number) => () => {
         setActiveDateIdx(idx)
-        onChange && onChange(new Date(_y, _m, idx))
+        onChange && onChange(new Date(year, month, idx))
     }
 
     const onClickSideMonthCell = (idx: number, isNext: boolean) => () => {
-        onClickBtn(isNext)()
+        onClickMonthBtn(isNext)()
         setActiveDateIdx(idx)
     }
 
     const renderCell = () => {
         const target = []
-        for (let i = 0; i < _d; i++) {
+        for (let i = 0; i < prevDistance; i++) {
             target.push(
                 <li
                     className="prev"
                     key={`prev-${i}`}
-                    onClick={onClickSideMonthCell(_prev_count, false)}
-                >{_prev_count++}
+                    onClick={onClickSideMonthCell(prevInitCount, false)}
+                >{prevInitCount++}
                 </li>
             )
         }
-        for (let i = 1; i <= _count; i++) {
+        for (let i = 1; i <= monthArea; i++) {
             target.push(
                 <li
                     key={i}
@@ -71,13 +79,13 @@ const InternalCalendar: React.ForwardRefRenderFunction<CalendarRef, CalendarProp
                 </li>
             )
         }
-        for (let i = _d + _count, _next_count = 1; i < 42; i++, _next_count++) {
+        for (let i = prevDistance + monthArea, nextInitCount = 1; i < 42; i++, nextInitCount++) {
             target.push(
                 <li
                     className="next"
-                    key={`next-${_next_count}`}
-                    onClick={onClickSideMonthCell(_next_count, true)}
-                >{_next_count}
+                    key={`next-${nextInitCount}`}
+                    onClick={onClickSideMonthCell(nextInitCount, true)}
+                >{nextInitCount}
                 </li>
             )
         }
@@ -86,9 +94,15 @@ const InternalCalendar: React.ForwardRefRenderFunction<CalendarRef, CalendarProp
 
     return <div className="calendar">
         <section className="calendar-header">
-            <button className="calendar-header__btn" onClick={onClickBtn(false)}>&lt;</button>
-            <span>{_y}年{`${date.getMonth() + 1}`}月</span>
-            <button className="calendar-header__btn" onClick={onClickBtn(true)}>&gt;</button>
+            <section>
+                <button className="calendar-header__btn" onClick={onClickYearBtn(false)}>&lt;&lt;</button>&nbsp;
+                <button className="calendar-header__btn" onClick={onClickMonthBtn(false)}>&lt;</button>
+            </section>
+            <span>{year}年{`${month + 1}`}月</span>
+            <section>
+                <button className="calendar-header__btn" onClick={onClickMonthBtn(true)}>&gt;</button>&nbsp;
+                <button className="calendar-header__btn" onClick={onClickYearBtn(true)}>&gt;&gt;</button>
+            </section>
         </section>
         <section className="calendar-content">
             <ul className="calendar-content__list">
@@ -104,6 +118,6 @@ const InternalCalendar: React.ForwardRefRenderFunction<CalendarRef, CalendarProp
             </ul>
         </section>
     </div>
-})
+}
 
-export const Calendar = forwardRef(InternalCalendar)
+export const Calendar = memo(forwardRef(InternalCalendar))
