@@ -1,19 +1,17 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Calendar } from "./components/calendar";
 
 function App() {
   const [value, setValue] = useState(new Date())
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setValue(new Date('2023-10-01'))
-    }, 3000)
-    return () => {
-      clearTimeout(timer)
-    }
+
+  const onChange = useCallback((date: Date) => {
+    setValue(date)
   }, [])
+
   return (
     <div className="App">
-      <Calendar dafaultValue={value} />
+      {value.toLocaleDateString()}
+      <Calendar onChange={onChange} />
     </div>
   );
 }

@@ -1,7 +1,25 @@
 .calendar {
-  width: 20vw;
+  width: 25vw;
   background-color: whitesmoke;
   border-radius: 5px;
+}
+
+@media screen and (max-width: 767px) {
+  .calendar {
+    width: 75vw;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .calendar {
+    width: 50vw;
+  }
+}
+
+@media screen and (min-width: 992px) {
+  .calendar {
+    width: 25vw;
+  }
 }
 
 .calendar>.calendar-header {

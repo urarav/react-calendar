@@ -24,9 +24,13 @@ const InternalCalendar: React.ForwardRefRenderFunction<CalendarRef, CalendarProp
     let prevInitCount = new Date(year, month, 0).getDate() - prevDistance + 1
     const [activeDateIdx, setActiveDateIdx] = useState(currentDate)
 
-    useEffect(() => {
+    useEffect(() => {                
         setDate(dafaultValue)
-    }, [props])
+    }, [props.dafaultValue])
+
+    useEffect(() => {
+        onChange && onChange(new Date(year, month, activeDateIdx))
+    }, [activeDateIdx])
 
     useImperativeHandle(ref, () => {
         return {
@@ -40,16 +44,19 @@ const InternalCalendar: React.ForwardRefRenderFunction<CalendarRef, CalendarProp
     })
 
     const onClickMonthBtn = (isNext: boolean) => () => {
-        setDate(new Date(year, isNext ? month + 1 : month - 1, 1))
+        const nextDate = new Date(year, isNext ? month + 1 : month - 1, 1)
+        setDate(nextDate)
+        onChange && onChange(nextDate)
     }
 
     const onClickYearBtn = (isNext: boolean) => () => {
-        setDate(new Date(isNext ? year + 1 : year - 1, month, 1))
+        const nextDate = new Date(isNext ? year + 1 : year - 1, month, 1)
+        setDate(nextDate)
+        onChange && onChange(nextDate)
     }
 
     const onClickCurrentMonthCell = (idx: number) => () => {
         setActiveDateIdx(idx)
-        onChange && onChange(new Date(year, month, idx))
     }
 
     const onClickSideMonthCell = (idx: number, isNext: boolean) => () => {
